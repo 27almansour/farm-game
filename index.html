@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة المزرعة - Farm Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🌾 لعبة المزرعة 🌾</h1>
+            <div class="game-info">
+                <div class="info-box">
+                    <span class="label">المال:</span>
+                    <span class="value" id="money">1000</span>
+                    <span class="currency">💰</span>
+                </div>
+                <div class="info-box">
+                    <span class="label">المستوى:</span>
+                    <span class="value" id="level">1</span>
+                    <span class="emoji">⭐</span>
+                </div>
+                <div class="info-box">
+                    <span class="label">الطقس:</span>
+                    <span class="value" id="weather">مشمس</span>
+                    <span class="emoji" id="weather-icon">☀️</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="game-area">
+            <!-- Left Panel - Farm Field -->
+            <div class="left-panel">
+                <h2>مزرعتك 🌱</h2>
+                <div class="farm-field" id="farmField"></div>
+            </div>
+
+            <!-- Center Panel - Actions -->
+            <div class="center-panel">
+                <h2>الإجراءات 🎮</h2>
+                
+                <!-- Plant Section -->
+                <div class="action-section">
+                    <h3>🌱 زراعة المحاصيل</h3>
+                    <button class="action-btn" onclick="plantCrop('wheat')">
+                        🌾 زرع قمح (50💰)
+                    </button>
+                    <button class="action-btn" onclick="plantCrop('corn')">
+                        🌽 زرع ذرة (75💰)
+                    </button>
+                    <button class="action-btn" onclick="plantCrop('tomato')">
+                        🍅 زرع طماطم (60💰)
+                    </button>
+                    <button class="action-btn" onclick="plantCrop('carrot')">
+                        🥕 زرع جزر (55💰)
+                    </button>
+                </div>
+
+                <!-- Animals Section -->
+                <div class="action-section">
+                    <h3>🐄 رعاية الحيوانات</h3>
+                    <button class="action-btn animal-btn" onclick="buyAnimal('cow')">
+                        🐄 شراء بقرة (200💰)
+                    </button>
+                    <button class="action-btn animal-btn" onclick="buyAnimal('chicken')">
+                        🐔 شراء دجاجة (100💰)
+                    </button>
+                    <button class="action-btn animal-btn" onclick="buyAnimal('pig')">
+                        🐷 شراء خنزير (150💰)
+                    </button>
+                    <button class="action-btn animal-btn" onclick="buyAnimal('sheep')">
+                        🐑 شراء خروف (120💰)
+                    </button>
+                </div>
+
+                <!-- Game Controls -->
+                <div class="action-section">
+                    <h3>⚙️ التحكم</h3>
+                    <button class="action-btn control-btn" onclick="advanceDay()">
+                        ⏩ اليوم التالي
+                    </button>
+                    <button class="action-btn control-btn" onclick="harvestAll()">
+                        ✂️ حصاد الكل
+                    </button>
+                    <button class="action-btn control-btn" onclick="feedAnimals()">
+                        🍽️ إطعام الحيوانات
+                    </button>
+                    <button class="action-btn control-btn" onclick="resetGame()">
+                        🔄 إعادة تعيين
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel - Inventory & Stats -->
+            <div class="right-panel">
+                <h2>المخزن 📦</h2>
+                
+                <div class="inventory-section">
+                    <h3>المحاصيل 🥗</h3>
+                    <div id="cropsInventory" class="inventory-list"></div>
+                </div>
+
+                <div class="inventory-section">
+                    <h3>الحيوانات 🐾</h3>
+                    <div id="animalsInventory" class="inventory-list"></div>
+                </div>
+
+                <div class="inventory-section">
+                    <h3>الإحصائيات 📊</h3>
+                    <div id="stats" class="stats-list"></div>
+                </div>
+
+                <div class="inventory-section">
+                    <h3>السوق 🏪</h3>
+                    <button class="action-btn sell-btn" onclick="openMarket()">
+                        فتح السوق
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Market Modal -->
+        <div id="marketModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeMarket()">&times;</span>
+                <h2>🏪 السوق</h2>
+                <div id="marketItems" class="market-items"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>اليوم: <span id="day">1</span> | الساعات في اليوم: <span id="gameTime">6:00</span></p>
+            <p>💡 ارفع المستوى بجني المزيد من المال والمحاصيل!</p>
+        </footer>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
