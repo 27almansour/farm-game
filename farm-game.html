@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة المزرعة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marhey:wght@400;600;700&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky:#EAF1DE;
+    --card:#FFFDF6;
+    --card-soft:#F6F1DF;
+    --soil:#5B4030;
+    --soil-soft:#8A6A50;
+    --leaf-900:#22421E;
+    --leaf-700:#2F5D3A;
+    --leaf-500:#4C8C5C;
+    --leaf-300:#8FC29B;
+    --wheat-600:#B9861E;
+    --wheat-500:#E3A83B;
+    --wheat-100:#FBE9C2;
+    --barn-600:#A6402F;
+    --barn-500:#C1503F;
+    --sky-500:#5D9BBE;
+    --ink:#2A2620;
+    --line: rgba(91,64,48,0.18);
+    --shadow-soft: 0 6px 16px rgba(43,58,30,0.10);
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-sm: 9px;
+    color-scheme: light;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --sky:#182018;
+      --card:#212a20;
+      --card-soft:#26301f;
+      --soil:#d8c3a5;
+      --soil-soft:#a98f6f;
+      --leaf-900:#dff0da;
+      --leaf-700:#a9d6ac;
+      --leaf-500:#6fbf7f;
+      --leaf-300:#3d5e42;
+      --wheat-600:#f0c869;
+      --wheat-500:#e3ac41;
+      --wheat-100:#3a301c;
+      --barn-600:#e07a67;
+      --barn-500:#d3634f;
+      --sky-500:#7fb8d6;
+      --ink:#eee7d8;
+      --line: rgba(216,195,165,0.18);
+      --shadow-soft: 0 6px 18px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --sky:#182018;
+    --card:#212a20;
+    --card-soft:#26301f;
+    --soil:#d8c3a5;
+    --soil-soft:#a98f6f;
+    --leaf-900:#dff0da;
+    --leaf-700:#a9d6ac;
+    --leaf-500:#6fbf7f;
+    --leaf-300:#3d5e42;
+    --wheat-600:#f0c869;
+    --wheat-500:#e3ac41;
+    --wheat-100:#3a301c;
+    --barn-600:#e07a67;
+    --barn-500:#d3634f;
+    --sky-500:#7fb8d6;
+    --ink:#eee7d8;
+    --line: rgba(216,195,165,0.18);
+    --shadow-soft: 0 6px 18px rgba(0,0,0,0.35);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--sky);
+    color: var(--ink);
+    font-family: 'Almarai', 'Tahoma', sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  h1,h2,h3{ font-family:'Marhey','Almarai',sans-serif; margin:0; }
+
+  .wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 18px 16px 40px;
+  }
+
+  /* ---------- Hero header ---------- */
+  .hero{
+    background: linear-gradient(135deg, var(--leaf-700), var(--leaf-500));
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    color: #fdfaf1;
+    box-shadow: var(--shadow-soft);
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+  .hero h1{
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    font-weight:700;
+    letter-spacing: .5px;
+  }
+  .stat-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .pill{
+    background: rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 8px 14px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:.95rem;
+    backdrop-filter: blur(2px);
+  }
+  .pill .lbl{ opacity:.85; font-size:.8rem; }
+  .pill .val{ font-weight:800; font-size:1.05rem; }
+
+  /* ---------- Board layout ---------- */
+  .board{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns: 1.15fr 1fr 0.9fr;
+    grid-template-areas: "field actions inventory";
+    gap:16px;
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    .board{ grid-template-columns: 1fr; grid-template-areas: "field" "actions" "inventory"; }
+  }
+  .panel{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+  }
+  .panel-field{ grid-area:field; }
+  .panel-actions{ grid-area:actions; }
+  .panel-inventory{ grid-area:inventory; }
+
+  .panel h2{
+    font-size:1.15rem;
+    color:var(--leaf-700);
+    margin-bottom:14px;
+  }
+
+  /* ---------- Farm field ---------- */
+  .farm-field{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap:10px;
+  }
+  .plot{
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    background: var(--soil-soft);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.6rem;
+    position:relative;
+    border: 2px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease;
+    cursor:default;
+  }
+  .plot.empty{
+    background: repeating-linear-gradient(45deg, var(--card-soft), var(--card-soft) 6px, var(--soil-soft) 6px, var(--soil-soft) 12px);
+    opacity:.55;
+  }
+  .plot.growing{ background: var(--leaf-300); }
+  .plot.ready{
+    background: var(--wheat-100);
+    border-color: var(--wheat-500);
+    cursor:pointer;
+    animation: pulseReady 1.6s ease-in-out infinite;
+  }
+  .plot.ready:hover{ transform: translateY(-2px); }
+  .plot .days-left{
+    position:absolute;
+    bottom:2px;
+    inset-inline-end:4px;
+    font-size:.62rem;
+    font-family:'Almarai',sans-serif;
+    background: rgba(0,0,0,0.35);
+    color:#fff;
+    border-radius:6px;
+    padding:1px 4px;
+  }
+  @keyframes pulseReady{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(227,168,59,0.45); }
+    50%{ box-shadow: 0 0 0 6px rgba(227,168,59,0); }
+  }
+  .field-hint{
+    margin-top:10px;
+    font-size:.85rem;
+    color: var(--soil-soft);
+  }
+
+  /* ---------- Action sections ---------- */
+  .action-section{ margin-bottom: 18px; }
+  .action-section:last-child{ margin-bottom:0; }
+  .action-section h3{
+    font-size:.98rem;
+    margin-bottom:8px;
+    color: var(--ink);
+  }
+  .btn-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:8px;
+  }
+  .action-btn{
+    font-family:'Almarai',sans-serif;
+    font-size:.85rem;
+    font-weight:700;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    cursor:pointer;
+    background: var(--leaf-500);
+    color:#fff;
+    transition: transform .1s ease, filter .15s ease;
+  }
+  .action-btn:hover{ filter:brightness(1.06); }
+  .action-btn:active{ transform: scale(.97); }
+  .action-btn:focus-visible{ outline: 3px solid var(--sky-500); outline-offset:2px; }
+  .action-btn.animal-btn{ background: var(--barn-500); }
+  .action-btn.control-btn{ background: var(--soil); color:#fdfaf1; }
+  .action-btn.sell-btn{ background: var(--wheat-500); color: var(--ink); width:100%; }
+  .action-btn:disabled{ opacity:.5; cursor:not-allowed; filter:none; }
+
+  /* ---------- Inventory ---------- */
+  .inventory-section{ margin-bottom:16px; }
+  .inventory-section:last-child{ margin-bottom:0; }
+  .inventory-section h3{ font-size:.95rem; margin-bottom:8px; }
+  .inventory-list{ display:flex; flex-direction:column; gap:6px; }
+  .inv-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background: var(--card-soft);
+    border-radius: var(--radius-sm);
+    padding:7px 10px;
+    font-size:.88rem;
+  }
+  .inv-row .name{ display:flex; align-items:center; gap:6px; }
+  .inv-row .status{ font-size:.75rem; opacity:.75; }
+  .empty-note{ font-size:.82rem; color:var(--soil-soft); }
+
+  .stats-list{ display:flex; flex-direction:column; gap:5px; font-size:.85rem; }
+  .stats-list div{ display:flex; justify-content:space-between; }
+  .stats-list span:last-child{ font-weight:800; color:var(--leaf-700); }
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0;
+    background: rgba(20,20,15,0.45);
+    display:flex; align-items:center; justify-content:center;
+    padding:16px;
+    z-index:50;
+  }
+  .modal-backdrop[hidden]{ display:none; }
+  .modal-card{
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding:22px;
+    max-width: 480px;
+    width:100%;
+    max-height:80vh;
+    overflow-y:auto;
+    position:relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+  .modal-card h2{ color:var(--leaf-700); margin-bottom:12px; }
+  .modal-close{
+    position:absolute; top:14px; inset-inline-start:14px;
+    background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--ink);
+  }
+  .market-list{ display:flex; flex-direction:column; gap:8px; }
+  .market-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background: var(--card-soft); border-radius: var(--radius-sm); padding:9px 12px;
+  }
+  .market-row .info{ font-size:.88rem; }
+  .market-row .price{ font-size:.78rem; color:var(--soil-soft); display:block; }
+  .market-row button{
+    background: var(--wheat-500); color:var(--ink); border:none; border-radius:8px;
+    padding:7px 12px; font-family:'Almarai',sans-serif; font-weight:700; font-size:.82rem; cursor:pointer;
+  }
+
+  /* ---------- Footer / toast ---------- */
+  .footer{
+    margin-top:18px;
+    text-align:center;
+    font-size:.85rem;
+    color: var(--soil-soft);
+  }
+  .toast{
+    position:fixed;
+    bottom:22px;
+    left:50%;
+    transform: translateX(-50%);
+    background: var(--leaf-900);
+    color:#fdfaf1;
+    padding:10px 20px;
+    border-radius: 999px;
+    font-size:.9rem;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+    z-index:60;
+    animation: toastIn .25s ease;
+  }
+  .toast[hidden]{ display:none; }
+  @keyframes toastIn{ from{ opacity:0; transform: translateX(-50%) translateY(8px);} to{opacity:1; transform: translateX(-50%) translateY(0);} }
+
+  @media (prefers-reduced-motion: reduce){
+    .plot.ready{ animation:none; }
+    .toast{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>🌾 لعبة المزرعة</h1>
+    <div class="stat-row">
+      <div class="pill">
+        <span class="lbl">المال</span>
+        <span class="val" id="money">1000</span>
+        <span>💰</span>
+      </div>
+      <div class="pill">
+        <span class="lbl">المستوى</span>
+        <span class="val" id="level">1</span>
+        <span>⭐</span>
+      </div>
+      <div class="pill">
+        <span class="lbl">الطقس</span>
+        <span class="val" id="weather">مشمس</span>
+        <span id="weather-icon">☀️</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="board">
+
+    <section class="panel panel-field">
+      <h2>مزرعتك 🌱</h2>
+      <div class="farm-field" id="farmField"></div>
+      <p class="field-hint">اضغط على أي محصول ناضج لحصاده مباشرة، أو استخدم زر "حصاد الكل".</p>
+    </section>
+
+    <section class="panel panel-actions">
+      <h2>الإجراءات 🎮</h2>
+
+      <div class="action-section">
+        <h3>🌱 زراعة المحاصيل</h3>
+        <div class="btn-grid">
+          <button class="action-btn" onclick="plantCrop('wheat')">🌾 قمح (50💰)</button>
+          <button class="action-btn" onclick="plantCrop('corn')">🌽 ذرة (75💰)</button>
+          <button class="action-btn" onclick="plantCrop('tomato')">🍅 طماطم (60💰)</button>
+          <button class="action-btn" onclick="plantCrop('carrot')">🥕 جزر (55💰)</button>
+        </div>
+      </div>
+
+      <div class="action-section">
+        <h3>🐄 رعاية الحيوانات</h3>
+        <div class="btn-grid">
+          <button class="action-btn animal-btn" onclick="buyAnimal('cow')">🐄 بقرة (200💰)</button>
+          <button class="action-btn animal-btn" onclick="buyAnimal('chicken')">🐔 دجاجة (100💰)</button>
+          <button class="action-btn animal-btn" onclick="buyAnimal('pig')">🐷 خنزير (150💰)</button>
+          <button class="action-btn animal-btn" onclick="buyAnimal('sheep')">🐑 خروف (120💰)</button>
+        </div>
+      </div>
+
+      <div class="action-section">
+        <h3>⚙️ التحكم</h3>
+        <div class="btn-grid">
+          <button class="action-btn control-btn" onclick="advanceDay()">⏩ اليوم التالي</button>
+          <button class="action-btn control-btn" onclick="harvestAll()">✂️ حصاد الكل</button>
+          <button class="action-btn control-btn" onclick="feedAnimals()">🍽️ إطعام الحيوانات</button>
+          <button class="action-btn control-btn" onclick="resetGame()">🔄 إعادة تعيين</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-inventory">
+      <h2>المخزن 📦</h2>
+
+      <div class="inventory-section">
+        <h3>المحاصيل 🥗</h3>
+        <div id="cropsInventory" class="inventory-list"></div>
+      </div>
+
+      <div class="inventory-section">
+        <h3>الحيوانات 🐾</h3>
+        <div id="animalsInventory" class="inventory-list"></div>
+      </div>
+
+      <div class="inventory-section">
+        <h3>الإحصائيات 📊</h3>
+        <div id="stats" class="stats-list"></div>
+      </div>
+
+      <div class="inventory-section">
+        <button class="action-btn sell-btn" onclick="openMarket()">🏪 فتح السوق</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>اليوم: <span id="day">1</span> · عدد الأراضي: <span id="plotsCount">6</span> · الساعات في اليوم: <span id="gameTime">6:00</span></p>
+    <p>💡 ارفع المستوى بجني المزيد من المال والمحاصيل!</p>
+  </footer>
+
+</div>
+
+<div id="marketBackdrop" class="modal-backdrop" hidden>
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeMarket()" aria-label="إغلاق">✕</button>
+    <h2>🏪 السوق</h2>
+    <div id="marketItems" class="market-list"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+
+  const CROPS = {
+    wheat:  { name:'قمح',    emoji:'🌾', cost:50, growDays:1, sell:90,  xp:8  },
+    corn:   { name:'ذرة',    emoji:'🌽', cost:75, growDays:2, sell:140, xp:14 },
+    tomato: { name:'طماطم',  emoji:'🍅', cost:60, growDays:2, sell:115, xp:12 },
+    carrot: { name:'جزر',    emoji:'🥕', cost:55, growDays:1, sell:95,  xp:9  },
+  };
+
+  const ANIMALS = {
+    cow:     { name:'بقرة',   emoji:'🐄', cost:200, feedCost:20, product:'milk',  productName:'حليب', productEmoji:'🥛', produce:3, sell:35 },
+    chicken: { name:'دجاجة', emoji:'🐔', cost:100, feedCost:10, product:'egg',   productName:'بيض',  productEmoji:'🥚', produce:4, sell:15 },
+    pig:     { name:'خنزير', emoji:'🐷', cost:150, feedCost:15, product:'meat',  productName:'لحم',  productEmoji:'🍖', produce:2, sell:60 },
+    sheep:   { name:'خروف',  emoji:'🐑', cost:120, feedCost:12, product:'wool',  productName:'صوف',  productEmoji:'🧶', produce:2, sell:45 },
+  };
+
+  const WEATHERS = {
+    sunny:  { name:'مشمس', icon:'☀️', growth:1, stormRisk:0 },
+    cloudy: { name:'غائم', icon:'☁️', growth:1, stormRisk:0 },
+    rainy:  { name:'ممطر', icon:'🌧️', growth:2, stormRisk:0 },
+    stormy: { name:'عاصف', icon:'⛈️', growth:0, stormRisk:0.25 },
+  };
+  const WEATHER_WEIGHTS = [['sunny',40],['cloudy',25],['rainy',25],['stormy',10]];
+
+  const STORAGE_KEY = 'farmGameStateV1';
+  const MAX_PLOTS_CAP = 16;
+
+  function freshState(){
+    return {
+      money: 1000,
+      xp: 0,
+      day: 1,
+      weather: 'sunny',
+      maxPlots: 6,
+      plots: Array.from({length:6}, () => ({crop:null, stage:0})),
+      inventory: { wheat:0, corn:0, tomato:0, carrot:0 },
+      animals: { cow:0, chicken:0, pig:0, sheep:0 },
+      animalProducts: { milk:0, egg:0, meat:0, wool:0 },
+      animalFedToday: { cow:false, chicken:false, pig:false, sheep:false },
+      animalUnfedStreak: { cow:0, chicken:0, pig:0, sheep:0 },
+      stats: { totalEarned:0, totalHarvests:0, totalPlanted:0 },
+    };
+  }
+
+  let state = loadState() || freshState();
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.plots)) return null;
+      return parsed;
+    }catch(e){ return null; }
+  }
+
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ /* storage unavailable — game still works, just won't persist */ }
+  }
+
+  function level(){ return 1 + Math.floor(state.xp / 150); }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => { t.hidden = true; }, 2400);
+  }
+
+  function fmt(n){ return Math.round(n).toLocaleString('ar'); }
+
+  // ---------- Actions ----------
+
+  window.plantCrop = function(type){
+    const crop = CROPS[type];
+    const idx = state.plots.findIndex(p => !p.crop);
+    if(idx === -1){ showToast('لا توجد أرض فارغة — وسّع مزرعتك أو احصد أولاً'); return; }
+    if(state.money < crop.cost){ showToast('لا يوجد مال كافٍ لهذا المحصول'); return; }
+    state.money -= crop.cost;
+    state.plots[idx] = { crop: type, stage: 0 };
+    state.stats.totalPlanted++;
+    render(); saveState();
+  };
+
+  window.buyAnimal = function(type){
+    const a = ANIMALS[type];
+    if(state.money < a.cost){ showToast('لا يوجد مال كافٍ لشراء هذا الحيوان'); return; }
+    state.money -= a.cost;
+    state.animals[type]++;
+    render(); saveState();
+    showToast(`${a.emoji} تمت إضافة ${a.name} إلى مزرعتك`);
+  };
+
+  window.harvestAll = function(){
+    let count = 0, earnedXp = 0;
+    state.plots.forEach(p => {
+      if(p.crop && p.stage >= CROPS[p.crop].growDays){
+        state.inventory[p.crop]++;
+        earnedXp += CROPS[p.crop].xp;
+        count++;
+        p.crop = null; p.stage = 0;
+      }
+    });
+    if(count === 0){ showToast('لا توجد محاصيل جاهزة للحصاد بعد'); return; }
+    state.stats.totalHarvests += count;
+    state.xp += earnedXp;
+    render(); saveState();
+    showToast(`تم حصاد ${count} محصول 🌾`);
+  };
+
+  window.harvestPlot = function(idx){
+    const p = state.plots[idx];
+    if(!p.crop || p.stage < CROPS[p.crop].growDays) return;
+    state.inventory[p.crop]++;
+    state.xp += CROPS[p.crop].xp;
+    state.stats.totalHarvests++;
+    p.crop = null; p.stage = 0;
+    render(); saveState();
+  };
+
+  window.feedAnimals = function(){
+    const owned = Object.keys(ANIMALS).filter(t => state.animals[t] > 0);
+    if(owned.length === 0){ showToast('ليس لديك حيوانات بعد'); return; }
+    const cost = owned.reduce((sum, t) => sum + ANIMALS[t].feedCost * state.animals[t], 0);
+    if(state.money < cost){ showToast(`تحتاج ${fmt(cost)}💰 لإطعام كل الحيوانات`); return; }
+    state.money -= cost;
+    owned.forEach(t => { state.animalFedToday[t] = true; state.animalUnfedStreak[t] = 0; });
+    render(); saveState();
+    showToast('تم إطعام الحيوانات 🍽️');
+  };
+
+  window.advanceDay = function(){
+    state.day++;
+
+    // weather
+    const total = WEATHER_WEIGHTS.reduce((s,[,w]) => s+w, 0);
+    let r = Math.random() * total;
+    for(const [key, w] of WEATHER_WEIGHTS){ if(r < w){ state.weather = key; break; } r -= w; }
+    const wx = WEATHERS[state.weather];
+
+    // crop growth + storm risk
+    let destroyed = 0;
+    state.plots.forEach(p => {
+      if(!p.crop) return;
+      if(Math.random() < wx.stormRisk){ p.crop = null; p.stage = 0; destroyed++; return; }
+      p.stage += wx.growth;
+    });
+
+    // animals
+    let earnedProducts = [], fled = [];
+    Object.keys(ANIMALS).forEach(type => {
+      if(state.animals[type] <= 0) return;
+      const a = ANIMALS[type];
+      if(state.animalFedToday[type]){
+        const amount = a.produce * state.animals[type];
+        state.animalProducts[a.product] += amount;
+        earnedProducts.push(`${a.productEmoji}×${amount}`);
+      } else {
+        state.animalUnfedStreak[type]++;
+        if(state.animalUnfedStreak[type] >= 3){
+          state.animals[type]--;
+          state.animalUnfedStreak[type] = 0;
+          fled.push(a.name);
+        }
+      }
+      state.animalFedToday[type] = false;
+    });
+
+    // level / plot expansion
+    const newMax = Math.min(6 + (level()-1), MAX_PLOTS_CAP);
+    if(newMax > state.maxPlots){
+      for(let i = state.maxPlots; i < newMax; i++) state.plots.push({crop:null, stage:0});
+      state.maxPlots = newMax;
+    }
+
+    render(); saveState();
+
+    let msg = `يوم جديد — الطقس ${wx.name} ${wx.icon}`;
+    if(destroyed > 0) msg += ` · دمرت العاصفة ${destroyed} محصول`;
+    if(fled.length) msg += ` · هرب: ${fled.join('، ')} بسبب الإهمال`;
+    showToast(msg);
+  };
+
+  window.openMarket = function(){ renderMarket(); document.getElementById('marketBackdrop').hidden = false; };
+  window.closeMarket = function(){ document.getElementById('marketBackdrop').hidden = true; };
+
+  window.sellAll = function(kind, key){
+    const store = kind === 'crop' ? state.inventory : state.animalProducts;
+    const def = kind === 'crop' ? CROPS[key] : Object.values(ANIMALS).find(a => a.product === key);
+    const qty = store[key];
+    if(!qty){ return; }
+    const revenue = qty * def.sell;
+    state.money += revenue;
+    state.stats.totalEarned += revenue;
+    state.xp += Math.round(revenue / 10);
+    store[key] = 0;
+    render(); renderMarket(); saveState();
+    showToast(`تم بيع ${qty} مقابل ${fmt(revenue)}💰`);
+  };
+
+  window.resetGame = function(){
+    if(!confirm('هل أنت متأكد من إعادة تعيين اللعبة بالكامل؟ لا يمكن التراجع عن هذا.')) return;
+    state = freshState();
+    render(); saveState();
+    showToast('تمت إعادة تعيين اللعبة');
+  };
+
+  // ---------- Rendering ----------
+
+  function render(){
+    document.getElementById('money').textContent = fmt(state.money);
+    document.getElementById('level').textContent = level();
+    document.getElementById('weather').textContent = WEATHERS[state.weather].name;
+    document.getElementById('weather-icon').textContent = WEATHERS[state.weather].icon;
+    document.getElementById('day').textContent = state.day;
+    document.getElementById('plotsCount').textContent = state.maxPlots;
+
+    renderField();
+    renderCropsInventory();
+    renderAnimalsInventory();
+    renderStats();
+  }
+
+  function renderField(){
+    const el = document.getElementById('farmField');
+    el.innerHTML = '';
+    state.plots.forEach((p, idx) => {
+      const div = document.createElement('div');
+      if(!p.crop){
+        div.className = 'plot empty';
+        div.textContent = '·';
+      } else {
+        const crop = CROPS[p.crop];
+        const ready = p.stage >= crop.growDays;
+        div.className = 'plot ' + (ready ? 'ready' : 'growing');
+        div.textContent = ready ? crop.emoji : '🌱';
+        if(ready){ div.title = 'اضغط للحصاد'; div.onclick = () => harvestPlot(idx); }
+        else {
+          const left = document.createElement('span');
+          left.className = 'days-left';
+          left.textContent = (crop.growDays - p.stage);
+          div.appendChild(left);
+        }
+      }
+      el.appendChild(div);
+    });
+  }
+
+  function renderCropsInventory(){
+    const el = document.getElementById('cropsInventory');
+    const entries = Object.keys(CROPS).filter(k => state.inventory[k] > 0);
+    if(entries.length === 0){ el.innerHTML = '<p class="empty-note">لا توجد محاصيل مخزّنة بعد</p>'; return; }
+    el.innerHTML = entries.map(k => {
+      const c = CROPS[k];
+      return `<div class="inv-row"><span class="name">${c.emoji} ${c.name}</span><span>${state.inventory[k]}</span></div>`;
+    }).join('');
+  }
+
+  function renderAnimalsInventory(){
+    const el = document.getElementById('animalsInventory');
+    const entries = Object.keys(ANIMALS).filter(k => state.animals[k] > 0);
+    if(entries.length === 0){ el.innerHTML = '<p class="empty-note">لا توجد حيوانات بعد</p>'; return; }
+    el.innerHTML = entries.map(k => {
+      const a = ANIMALS[k];
+      const fed = state.animalFedToday[k];
+      const products = state.animalProducts[a.product];
+      return `<div class="inv-row">
+        <span class="name">${a.emoji} ${a.name} ×${state.animals[k]}</span>
+        <span class="status">${fed ? '🍽️ تم إطعامها' : '😟 جائعة'} · ${a.productEmoji}${products}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function renderStats(){
+    const el = document.getElementById('stats');
+    const s = state.stats;
+    el.innerHTML = `
+      <div><span>إجمالي الأرباح</span><span>${fmt(s.totalEarned)}💰</span></div>
+      <div><span>عدد الحصادات</span><span>${s.totalHarvests}</span></div>
+      <div><span>عدد المزروعات</span><span>${s.totalPlanted}</span></div>
+      <div><span>نقاط الخبرة</span><span>${state.xp}</span></div>
+    `;
+  }
+
+  function renderMarket(){
+    const el = document.getElementById('marketItems');
+    let rows = [];
+    Object.keys(CROPS).forEach(k => {
+      if(state.inventory[k] > 0){
+        const c = CROPS[k];
+        rows.push(`<div class="market-row">
+          <div class="info">${c.emoji} ${c.name} ×${state.inventory[k]}<span class="price">${c.sell}💰 للوحدة</span></div>
+          <button onclick="sellAll('crop','${k}')">بيع الكل</button>
+        </div>`);
+      }
+    });
+    Object.values(ANIMALS).forEach(a => {
+      if(state.animalProducts[a.product] > 0){
+        rows.push(`<div class="market-row">
+          <div class="info">${a.productEmoji} ${a.productName} ×${state.animalProducts[a.product]}<span class="price">${a.sell}💰 للوحدة</span></div>
+          <button onclick="sellAll('animal','${a.product}')">بيع الكل</button>
+        </div>`);
+      }
+    });
+    el.innerHTML = rows.length ? rows.join('') : '<p class="empty-note">لا يوجد شيء للبيع حالياً — احصد أو اجمع منتجات أولاً</p>';
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
