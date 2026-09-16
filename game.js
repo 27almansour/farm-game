@@ -145,19 +145,29 @@ function harvestCrop(index) {
 // Harvest all mature crops
 function harvestAll() {
     let harvested = 0;
+    let totalMoney = 0;
     
-    gameState.field.forEach((crop, index) => {
+    for (let i = 0; i < gameState.field.length; i++) {
+        const crop = gameState.field[i];
         if (crop && crop.age >= crop.growthTime) {
-            harvestCrop(index);
+            gameState.money += crop.harvest;
+            gameState.inventory[crop.type]++;
+            gameState.totalHarvested++;
+            totalMoney += crop.harvest;
+            gameState.field[i] = null;
             harvested++;
+            checkLevelUp();
         }
-    });
+    }
     
     if (harvested === 0) {
         showNotification('لا توجد محاصيل جاهزة للحصاد! ⏳', 'error');
     } else {
-        showNotification(`تم حصاد ${harvested} محاصيل! 🎉`, 'success');
+        showNotification(`تم حصاد ${harvested} محاصيل! 🎉 +${totalMoney}💰`, 'success');
     }
+    
+    renderFarm();
+    updateUI();
 }
 
 // Buy animal
@@ -193,7 +203,7 @@ function feedAnimals() {
     }
     
     gameState.money -= feedCost;
-    showNotification(`تم إطعام ${totalAnimals} حيوانات! 🍽️`, 'success');
+    showNotification(`تم إطعام ${totalAnimals} حيوانات! 🍽️ -${feedCost}💰`, 'success');
     updateUI();
 }
 
@@ -218,6 +228,7 @@ function advanceDay() {
     
     if (animalMoney > 0) {
         gameState.money += animalMoney;
+        gameState.totalMoney += animalMoney;
         showNotification(`الحيوانات أنتجت: +${animalMoney} 💰`, 'success');
     }
     
@@ -236,7 +247,8 @@ function checkLevelUp() {
     
     if (newLevel > gameState.level) {
         gameState.level = newLevel;
-        gameState.money += 500; // Bonus money
+        gameState.money += 500;
+        gameState.totalMoney += 500;
         showNotification(`🎉 تم الترقية للمستوى ${gameState.level}! +500 💰`, 'success');
     }
 }
@@ -247,23 +259,32 @@ function openMarket() {
     const marketItems = document.getElementById('marketItems');
     marketItems.innerHTML = '';
     
+    let hasItems = false;
+    
     for (const [cropType, quantity] of Object.entries(gameState.inventory)) {
         if (quantity > 0) {
+            hasItems = true;
             const price = marketPrices[cropType];
             const cropData = crops[cropType];
+            const totalPrice = quantity * price;
             
             const item = document.createElement('div');
             item.className = 'market-item';
             item.innerHTML = `
-                <div>${cropData.icon}</div>
-                <div><strong>${cropData.name}</strong></div>
-                <div>عدد: ${quantity}</div>
-                <div class="price">${price} 💰 للواحد</div>
-                <button style="width: 100%; margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.3); border: none; border-radius: 5px; color: white; cursor: pointer; font-weight: bold;" onclick="sellCrop('${cropType}', ${quantity}, ${price})">بيع الكل</button>
+                <div style="font-size: 2.5em;">${cropData.icon}</div>
+                <div style="margin-top: 8px;"><strong>${cropData.name}</strong></div>
+                <div style="font-size: 0.9em; color: rgba(255,255,255,0.8);">عدد: ${quantity}</div>
+                <div style="font-size: 0.85em; color: rgba(255,255,255,0.9); margin-top: 5px;">${price} 💰 للواحد</div>
+                <div style="font-size: 0.9em; font-weight: bold; color: #ffeb3b; margin-top: 5px;">الإجمالي: ${totalPrice} 💰</div>
+                <button onclick="sellCrop('${cropType}', ${quantity}, ${price})" style="width: 100%; margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.3); border: none; border-radius: 5px; color: white; cursor: pointer; font-weight: bold; transition: all 0.2s;">بيع الكل</button>
             `;
             
             marketItems.appendChild(item);
         }
+    }
+    
+    if (!hasItems) {
+        marketItems.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">لا توجد محاصيل للبيع 😞</p>';
     }
     
     modal.classList.add('show');
@@ -348,11 +369,11 @@ function updateUI() {
     const stats = document.getElementById('stats');
     stats.innerHTML = `
         <div class="stat-item">
-            <span>إجمالي المحاصيل المجموعة:</span>
+            <span>المحاصيل المجموعة:</span>
             <strong>${gameState.totalHarvested}</strong>
         </div>
         <div class="stat-item">
-            <span>إجمالي المال المكتسب:</span>
+            <span>إجمالي المال:</span>
             <strong>${gameState.totalMoney}</strong>
         </div>
         <div class="stat-item">
@@ -376,7 +397,6 @@ function showNotification(message, type = 'success') {
 
 // Show plant options
 function showPlantOptions(index) {
-    // Placeholder - can be enhanced with a modal
     console.log('Select crop for cell', index);
 }
 
